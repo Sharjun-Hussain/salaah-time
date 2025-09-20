@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
-const IslamicAnalogClock = ({
+// Define the props interface for type safety
+interface IslamicAnalogClockProps {
+    prayerTimes?: { [key: string]: string };
+    colors?: { [key: string]: string };
+    showPrayerTimes?: boolean;
+    borderDesign?: 'simple' | 'geometric';
+    showArabicNumerals?: boolean;
+}
+
+const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
     prayerTimes = {},
     colors = {},
     showPrayerTimes = true,
@@ -9,7 +18,6 @@ const IslamicAnalogClock = ({
 }) => {
     const [time, setTime] = useState(new Date());
 
-    // Define default colors
     const defaultColors = {
         faceColor: '#ffffff',
         borderColor: '#333333',
@@ -22,7 +30,6 @@ const IslamicAnalogClock = ({
         prayerTimeTextColor: '#008000',
     };
 
-    // Merge user-provided colors with defaults
     const themeColors = { ...defaultColors, ...colors };
 
     useEffect(() => {
@@ -34,28 +41,38 @@ const IslamicAnalogClock = ({
         const seconds = time.getSeconds();
         const minutes = time.getMinutes();
         const hours = time.getHours();
-
         const secondDeg = (seconds / 60) * 360;
         const minuteDeg = (minutes / 60) * 360 + (seconds / 60) * 6;
-        const hourDeg = (hours / 12) * 360 + (minutes / 60) * 30;
-
+        const hourDeg = (hours % 12) * 30 + (minutes / 60) * 30; // Use modulo 12 for hours
         return { secondDeg, minuteDeg, hourDeg };
     };
 
-    const parseTimeToDegrees = (timeStr: string) => {
+    /**
+     * FIX: This function now correctly handles both 24-hour ("14:30")
+     * and 12-hour ("2:30 PM") time formats.
+     */
+    const parseTimeToDegrees = (timeStr: string | undefined): number => {
         if (!timeStr) return 0;
-        const [timePart, modifier] = timeStr.split(' ');
-        let [hours, minutes] = timePart.split(':').map(Number);
 
-        if (modifier === 'PM' && hours < 12) hours += 12;
-        if (modifier === 'AM' && hours === 12) hours = 0;
+        let hours: number, minutes: number;
 
-        return (hours / 12) * 360 + (minutes / 60) * 30;
+        if (timeStr.includes('AM') || timeStr.includes('PM')) {
+            const [timePart, modifier] = timeStr.split(' ');
+            [hours, minutes] = timePart.split(':').map(Number);
+            if (modifier === 'PM' && hours < 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0; // Midnight case
+        } else {
+            [hours, minutes] = timeStr.split(':').map(Number);
+        }
+
+        const totalHours = hours + minutes / 60;
+        return (totalHours % 12) * 30; // Use modulo 12 and convert to degrees
     };
+
 
     const { secondDeg, minuteDeg, hourDeg } = getRotationDegrees();
     const arabicNumerals = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١', '١٢'];
-    const center = 100; // SVG coordinate system center
+    const center = 100;
     const radius = 90;
 
     return (
@@ -77,14 +94,23 @@ const IslamicAnalogClock = ({
 
             {/* Hour/Minute Markers and Numerals */}
             {Array.from({ length: 12 }).map((_, i) => {
-                const angle = (i * 30 * Math.PI) / 180;
-                const x1 = center + radius * Math.sin(angle);
-                const y1 = center - radius * Math.cos(angle);
-                const x2 = center + (radius - 5) * Math.sin(angle);
-                const y2 = center - (radius - 5) * Math.cos(angle);
-                const numeralX = center + (radius - 15) * Math.sin(angle);
-                const numeralY = center - (radius - 15) * Math.cos(angle);
-                const numeral = showArabicNumerals ? arabicNumerals[i] : i + 1;
+                const numeral = i + 1;
+                /**
+                 * FIX: The angle calculation now correctly corresponds to the numeral (1-12).
+                 * The angle for numeral 'n' is n * 30 degrees.
+                 */
+                const angleRad = (numeral * 30 * Math.PI) / 180;
+
+                // Position for the tick marks
+                const x1 = center + radius * Math.sin(angleRad);
+                const y1 = center - radius * Math.cos(angleRad);
+                const x2 = center + (radius - 5) * Math.sin(angleRad);
+                const y2 = center - (radius - 5) * Math.cos(angleRad);
+
+                // Position for the numerals
+                const numeralX = center + (radius - 18) * Math.sin(angleRad);
+                const numeralY = center - (radius - 18) * Math.cos(angleRad);
+                const displayNumeral = showArabicNumerals ? arabicNumerals[i] : numeral;
 
                 return (
                     <g key={`marker-${i}`}>
@@ -95,10 +121,11 @@ const IslamicAnalogClock = ({
                             textAnchor="middle"
                             dominantBaseline="middle"
                             fill={themeColors.numeralsColor}
-                            fontSize="12"
+                            fontSize="14"
+                            fontWeight="bold"
                             fontFamily="Arial, sans-serif"
                         >
-                            {numeral}
+                            {displayNumeral}
                         </text>
                     </g>
                 );
@@ -107,9 +134,9 @@ const IslamicAnalogClock = ({
             {/* Prayer Time Markers */}
             {showPrayerTimes &&
                 Object.entries(prayerTimes).map(([name, time]) => {
-                    if (!time) return null;
                     const angle = parseTimeToDegrees(time as string);
-                    const textAngle = angle + 90; // for proper text orientation
+                    if (time === undefined) return null;
+
                     return (
                         <g key={name} transform={`rotate(${angle} ${center} ${center})`}>
                             <line
@@ -120,16 +147,17 @@ const IslamicAnalogClock = ({
                                 stroke={themeColors.prayerTimeMarkerColor}
                                 strokeWidth="2"
                             />
+                            {/* FIX: Simplified and corrected the text rotation to always be upright */}
                             <text
                                 x={center}
-                                y={center - radius - 6}
-                                transform={`rotate(${-textAngle} ${center} ${center - radius - 6})`}
+                                y={center - radius - 8}
+                                transform={`rotate(${-angle} ${center} ${center - radius - 8})`}
                                 textAnchor="middle"
-                                fontSize="6"
+                                fontSize="7"
                                 fill={themeColors.prayerTimeTextColor}
                                 fontWeight="bold"
                             >
-                                {name}
+                                {name.charAt(0).toUpperCase() + name.slice(1)}
                             </text>
                         </g>
                     );
@@ -138,32 +166,18 @@ const IslamicAnalogClock = ({
             {/* Clock Hands */}
             <g>
                 <line
-                    x1={center}
-                    y1={center}
-                    x2={center}
-                    y2={center - 50}
-                    stroke={themeColors.hourHandColor}
-                    strokeWidth="5"
-                    strokeLinecap="round"
+                    x1={center} y1={center} x2={center} y2={center - 50}
+                    stroke={themeColors.hourHandColor} strokeWidth="5" strokeLinecap="round"
                     transform={`rotate(${hourDeg} ${center} ${center})`}
                 />
                 <line
-                    x1={center}
-                    y1={center}
-                    x2={center}
-                    y2={center - 75}
-                    stroke={themeColors.minuteHandColor}
-                    strokeWidth="3"
-                    strokeLinecap="round"
+                    x1={center} y1={center} x2={center} y2={center - 75}
+                    stroke={themeColors.minuteHandColor} strokeWidth="3" strokeLinecap="round"
                     transform={`rotate(${minuteDeg} ${center} ${center})`}
                 />
                 <line
-                    x1={center}
-                    y1={center + 20}
-                    x2={center}
-                    y2={center - 80}
-                    stroke={themeColors.secondHandColor}
-                    strokeWidth="1.5"
+                    x1={center} y1={center + 20} x2={center} y2={center - 80}
+                    stroke={themeColors.secondHandColor} strokeWidth="1.5"
                     transform={`rotate(${secondDeg} ${center} ${center})`}
                 />
             </g>

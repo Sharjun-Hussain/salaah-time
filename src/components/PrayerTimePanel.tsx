@@ -43,7 +43,7 @@ const PrayerTimesPanel: React.FC<PrayerTimesPanelProps> = ({ prayerTimes }) => {
     }, [prayerTimes]);
 
     return (
-        <div className="bg-black/30 backdrop-blur-sm p-4 md:p-6 rounded-2xl shadow-lg">
+        <div className=" backdrop-blur-sm p-4 md:p-6 rounded-2xl shadow-lg">
             {/* Main container stacks vertically on small screens, horizontal on large */}
             <div className="flex flex-col lg:flex-row items-center justify-start gap-6 lg:gap-8">
                 {/* This container defines the grid for prayer times */}
