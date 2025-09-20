@@ -23,12 +23,18 @@
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@umalqura/core": "^0.0.7",
+    "date-fns": "^4.1.0",
+    "hijri-date": "^0.2.2",
+    "moment-hijri": "^3.0.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.5.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^14.3.1",
+    "@types/moment-hijri": "^2.1.4",
     "@types/node": "^20.19.14",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
