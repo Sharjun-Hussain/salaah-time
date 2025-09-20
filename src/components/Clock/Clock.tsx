@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-// Define the props interface for type safety
 interface IslamicAnalogClockProps {
-    prayerTimes?: { [key: string]: string };
+    prayerTimes?: { [key: string]: string }; // Note: This prop isn't used within the clock itself, but might be passed.
     colors?: { [key: string]: string };
     showPrayerTimes?: boolean;
     borderDesign?: 'simple' | 'geometric';
@@ -10,24 +9,23 @@ interface IslamicAnalogClockProps {
 }
 
 const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
-    prayerTimes = {},
     colors = {},
-    showPrayerTimes = true,
+    // Removed prayerTimes, showPrayerTimes as they are not used in this specific clock display
     borderDesign = 'simple',
     showArabicNumerals = false,
 }) => {
     const [time, setTime] = useState(new Date());
 
     const defaultColors = {
-        faceColor: '#ffffff',
-        borderColor: '#333333',
-        numeralsColor: '#000000',
-        centerDotColor: '#000000',
-        hourHandColor: '#222222',
-        minuteHandColor: '#444444',
-        secondHandColor: '#ff0000',
-        prayerTimeMarkerColor: '#006400',
-        prayerTimeTextColor: '#008000',
+        faceColor: 'rgba(255, 255, 255, 0.95)', // Slightly translucent white for modernity
+        borderColor: '#4A90E2', // Primary blue for border
+        numeralsColor: '#1A202C', // Dark background color for numerals
+        centerDotColor: '#FFD700', // Accent gold for center
+        hourHandColor: '#1A202C',
+        minuteHandColor: '#4A90E2',
+        secondHandColor: '#FF5733', // A bright contrasting color
+        prayerTimeMarkerColor: '#50E3C2', // Secondary green
+        prayerTimeTextColor: '#008000', // Unused in this version, but kept for consistency
     };
 
     const themeColors = { ...defaultColors, ...colors };
@@ -43,32 +41,9 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
         const hours = time.getHours();
         const secondDeg = (seconds / 60) * 360;
         const minuteDeg = (minutes / 60) * 360 + (seconds / 60) * 6;
-        const hourDeg = (hours % 12) * 30 + (minutes / 60) * 30; // Use modulo 12 for hours
+        const hourDeg = (hours % 12) * 30 + (minutes / 60) * 30;
         return { secondDeg, minuteDeg, hourDeg };
     };
-
-    /**
-     * FIX: This function now correctly handles both 24-hour ("14:30")
-     * and 12-hour ("2:30 PM") time formats.
-     */
-    const parseTimeToDegrees = (timeStr: string | undefined): number => {
-        if (!timeStr) return 0;
-
-        let hours: number, minutes: number;
-
-        if (timeStr.includes('AM') || timeStr.includes('PM')) {
-            const [timePart, modifier] = timeStr.split(' ');
-            [hours, minutes] = timePart.split(':').map(Number);
-            if (modifier === 'PM' && hours < 12) hours += 12;
-            if (modifier === 'AM' && hours === 12) hours = 0; // Midnight case
-        } else {
-            [hours, minutes] = timeStr.split(':').map(Number);
-        }
-
-        const totalHours = hours + minutes / 60;
-        return (totalHours % 12) * 30; // Use modulo 12 and convert to degrees
-    };
-
 
     const { secondDeg, minuteDeg, hourDeg } = getRotationDegrees();
     const arabicNumerals = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١', '١٢'];
@@ -95,19 +70,13 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
             {/* Hour/Minute Markers and Numerals */}
             {Array.from({ length: 12 }).map((_, i) => {
                 const numeral = i + 1;
-                /**
-                 * FIX: The angle calculation now correctly corresponds to the numeral (1-12).
-                 * The angle for numeral 'n' is n * 30 degrees.
-                 */
                 const angleRad = (numeral * 30 * Math.PI) / 180;
 
-                // Position for the tick marks
                 const x1 = center + radius * Math.sin(angleRad);
                 const y1 = center - radius * Math.cos(angleRad);
                 const x2 = center + (radius - 5) * Math.sin(angleRad);
                 const y2 = center - (radius - 5) * Math.cos(angleRad);
 
-                // Position for the numerals
                 const numeralX = center + (radius - 18) * Math.sin(angleRad);
                 const numeralY = center - (radius - 18) * Math.cos(angleRad);
                 const displayNumeral = showArabicNumerals ? arabicNumerals[i] : numeral;
@@ -130,38 +99,6 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
                     </g>
                 );
             })}
-
-            {/* Prayer Time Markers */}
-            {showPrayerTimes &&
-                Object.entries(prayerTimes).map(([name, time]) => {
-                    const angle = parseTimeToDegrees(time as string);
-                    if (time === undefined) return null;
-
-                    return (
-                        <g key={name} transform={`rotate(${angle} ${center} ${center})`}>
-                            <line
-                                x1={center}
-                                y1={center - radius + 8}
-                                x2={center}
-                                y2={center - radius + 14}
-                                stroke={themeColors.prayerTimeMarkerColor}
-                                strokeWidth="2"
-                            />
-                            {/* FIX: Simplified and corrected the text rotation to always be upright */}
-                            <text
-                                x={center}
-                                y={center - radius - 8}
-                                transform={`rotate(${-angle} ${center} ${center - radius - 8})`}
-                                textAnchor="middle"
-                                fontSize="7"
-                                fill={themeColors.prayerTimeTextColor}
-                                fontWeight="bold"
-                            >
-                                {name.charAt(0).toUpperCase() + name.slice(1)}
-                            </text>
-                        </g>
-                    );
-                })}
 
             {/* Clock Hands */}
             <g>

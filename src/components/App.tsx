@@ -5,7 +5,11 @@ import { DateInfo, MosqueInfo, PrayerTime } from 'types';
 import PrayerTimesPanel from './PrayerTimePanel';
 import BottomBar from './BottomBar';
 import TopBar from './TopBar';
-import MosqueBackgroundImage from 'assets/mosque-bg.jpg';
+import NextPrayerInfo from './NextPrayerInfo';
+
+// Assuming you still want a background image, ensure it's high quality and fits the modern theme.
+// If you prefer a pure gradient, you can remove this import and the `style` prop.
+import MosqueBackgroundImage from 'assets/mosque-bg.jpg'; // Update to a modern background image
 
 function App() {
   const prayerTimesData: PrayerTime[] = [
@@ -29,24 +33,26 @@ function App() {
     hijri: hijriDate,
   };
 
-  const scrollingMessage = "Change this on the Masjid Dashboard • Please follow health protocols • Keep the mosque clean";
+  const scrollingMessage = "Connect with us | Visit our website for more info | May Allah bless you abundantly | Ensure your phone is on silent inside the mosque.";
 
   return (
+    // Applied a modern gradient background to the entire screen
     <div
-      className="w-screen h-screen bg-cover bg-center p-4 md:p-6 lg:p-8" // Responsive padding
-      style={{ backgroundImage: `url(${MosqueBackgroundImage})` }}
+      className="w-screen h-screen p-4 md:p-6 lg:p-8 text-text-primary bg-gradient-to-br from-dark-background via-blue-900 to-primary-blue"
+      style={{ backgroundImage: `url(${MosqueBackgroundImage})`, backgroundBlendMode: 'overlay' }} // Blend image with gradient
     >
-      <div className="relative w-full h-full rounded-lg shadow-2xl flex flex-col text-white">
+      <div className="relative w-full h-full rounded-2xl shadow-2xl flex flex-col backdrop-brightness-75 backdrop-blur-sm border border-primary-blue/30 overflow-hidden">
+
         <TopBar mosqueInfo={mosqueInfo} dateInfo={dateInfo} />
 
-        {/* Use items-start to keep panel at the top, and add responsive margin */}
-        <main className="flex-grow flex items-start mt-4 lg:mt-8">
+        <main className="flex-grow flex flex-col lg:flex-row items-center lg:items-start justify-center lg:justify-start gap-6 xl:gap-12 p-4 md:p-6 lg:p-8">
           <PrayerTimesPanel prayerTimes={prayerTimesData} />
+          <NextPrayerInfo prayerTimes={prayerTimesData} />
         </main>
       </div>
 
       <BottomBar message={scrollingMessage} />
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs md:text-sm text-gray-300 font-semibold tracking-widest">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs md:text-sm text-text-light font-light tracking-wider animate-fade-in">
         Design & Developed By Inzeedo
       </div>
     </div>
