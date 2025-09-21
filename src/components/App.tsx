@@ -10,6 +10,7 @@ import NextPrayerInfo from './NextPrayerInfo';
 // Update to a modern background image if you have one
 import MosqueBackgroundImage from 'assets/mosque-bg.jpg';
 import newimage from 'assets/new.jpg'
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function App() {
   const prayerTimesData: PrayerTime[] = [
@@ -71,6 +72,7 @@ function App() {
           </div>
         </div>
       </div>
+      <SpeedInsights />
     </div>
   );
 }
