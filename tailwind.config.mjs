@@ -20,6 +20,7 @@ export default {
         marquee: 'marquee 40s linear infinite',
         'fade-in': 'fadeIn 1s ease-out forwards',
         'pulse-light': 'pulseLight 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'subtle-pulse': 'subtlePulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         marquee: {
@@ -33,6 +34,10 @@ export default {
         pulseLight: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.7' },
+        },
+        subtlePulse: {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0.3 },
         },
       },
     },
