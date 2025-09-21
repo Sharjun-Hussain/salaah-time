@@ -39,8 +39,8 @@ const TopBar: React.FC<TopBarProps> = ({ mosqueInfo, dateInfo }) => {
                 <FaMosque className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0" />
                 <div>
                     {/* Responsive font sizes */}
-                    <h1 className="text-4xl sm:text-3xl xl:text-4xl font-extrabold">{mosqueInfo.name}</h1>
-                    <p className="text-lg, font-light, text-gray-300">{mosqueInfo.address}</p>
+                    <h1 className="text-2xl sm:text-3xl xl:text-4xl font-bold">{mosqueInfo.name}</h1>
+                    <p className="text-[10px] sm:text-xs xl:text-lg text-gray-200">{mosqueInfo.address}</p>
                 </div>
             </div>
             <div className="text-right flex-shrink-0">

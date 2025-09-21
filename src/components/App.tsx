@@ -41,7 +41,7 @@ function App() {
 
       {/* ...to this inner div, which holds all the content. */}
       <div
-        className="relative w-full h-full flex flex-col overflow-hidden bg-cover bg-center p-8"
+        className="relative w-full h-full flex flex-col overflow-hidden bg-cover bg-center"
         style={{ backgroundImage: `url(${newimage})` }}
       >
 
@@ -65,16 +65,14 @@ function App() {
             <div className="mb-8">
               {/* <BottomBar message={scrollingMessage} /> */}
             </div>
-
+            <div className="text-center text-xs md:text-sm text-text-light font-light tracking-wider pb-4">
+              Design & Developed By Inzeedo
+            </div>
           </div>
         </div>
-        <div className="text-center text-xs md:text-sm text-text-light font-light tracking-wider pb-4">
-          Design & Developed By Inzeedo
-        </div>
       </div>
-
     </div>
   );
 }
 
-export default App; 
+export default App;
