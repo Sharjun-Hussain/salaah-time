@@ -46,7 +46,8 @@ const TopBar: React.FC<TopBarProps> = ({ mosqueInfo, dateInfo }) => {
             <div className="text-right flex-shrink-0">
                 {/* Responsive font sizes */}
                 <p className="font-semibold text-base sm:text-lg xl:text-xl">
-                    {dateInfo.gregorian} | {formattedHijriDate}
+                    {dateInfo.gregorian}
+                    <p>{formattedHijriDate}</p>
                 </p>
             </div>
         </header>
