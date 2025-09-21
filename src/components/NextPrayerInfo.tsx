@@ -170,15 +170,15 @@ const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
 
             <div className="mt-6 flex gap-6">
                 <div>
-                    <p className="text-xs text-gray-400">{nextEvent.type === 'ADHAN' ? 'Adhan at' : 'Iqamah at'}</p>
-                    <p className="text-base font-medium text-white">
+                    <p className="text-sm text-gray-400">{nextEvent.type === 'ADHAN' ? 'Adhan at' : 'Iqamah at'}</p>
+                    <p className="text-2xl font-bold text-white">
                         {nextEvent.targetTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                     </p>
                 </div>
                 {nextEvent.type === 'ADHAN' && (
                     <div>
-                        <p className="text-xs text-gray-400">Iqamah at</p>
-                        <p className="text-base font-medium text-emerald-300">
+                        <p className="text-sm text-gray-400">Iqamah at</p>
+                        <p className="text-2xl font-bold text-emerald-300">
                             {(() => {
                                 const prayer = prayerTimes.find(p => p.name === nextEvent.name);
                                 if (!prayer) return '';
