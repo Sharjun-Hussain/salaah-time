@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FiSunrise, FiSun, FiSunset, FiMoon } from 'react-icons/fi';
 import { FaCloudSun } from "react-icons/fa";
-import { PrayerTime } from '../types';
+import { PrayerTime } from '../types'; // Ensure your types are in './types'
 import PrayerTimeItem from './PrayerTimeItem';
-import IslamicAnalogClock from './Clock/Clock';
+import IslamicAnalogClock from './Clock/Clock'; // Ensure your clock is in this path
 
 interface PrayerTimesPanelProps {
     prayerTimes: PrayerTime[];
@@ -20,6 +20,7 @@ const PrayerTimesPanel: React.FC<PrayerTimesPanelProps> = ({ prayerTimes }) => {
         Isha: <FiMoon />,
     };
 
+    // This hook efficiently checks for the active prayer once per minute.
     useEffect(() => {
         const updateActivePrayer = () => {
             const now = new Date();
@@ -38,26 +39,26 @@ const PrayerTimesPanel: React.FC<PrayerTimesPanelProps> = ({ prayerTimes }) => {
             setActivePrayerIndex(currentPrayerIndex);
         };
         updateActivePrayer();
-        const interval = setInterval(updateActivePrayer, 60000);
+        const interval = setInterval(updateActivePrayer, 60000); // Check once a minute
         return () => clearInterval(interval);
     }, [prayerTimes]);
 
     return (
-        <div className="">
-            {/* Main container stacks vertically on small screens, horizontal on large */}
-            <div className="flex flex-col lg:flex-row items-center justify-start gap-6 lg:gap-8">
-                {/* This container defines the grid for prayer times */}
-                <div className="w-full lg:w-auto flex flex-col gap-3">
-                    {/* Grid layout for perfect column alignment. Defines 4 columns. */}
-                    <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 text-xs md:text-sm font-bold text-gray-300 px-3">
-                        {/* Headers now align perfectly with the grid columns */}
+        // Main container with a modern, semi-transparent background
+        <div className="bg-black/25 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/10">
+            <div className="flex flex-col xl:flex-row items-center justify-center gap-8">
+
+                {/* Prayer Times List */}
+                <div className="w-full flex-shrink-0 xl:w-auto flex flex-col gap-2">
+                    {/* Headers for the columns */}
+                    <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-4 text-sm font-bold text-gray-400 px-3 pb-2 border-b border-white/10">
                         <div /> {/* Empty cell for icon column */}
                         <p>Prayer</p>
                         <p className="text-right">Adhan</p>
                         <p className="text-right">Iqamah</p>
                     </div>
 
-                    {/* The list of prayer times will flow into the grid defined above */}
+                    {/* The list of prayers */}
                     {prayerTimes.map((prayer, index) => (
                         <PrayerTimeItem
                             key={prayer.name}
@@ -70,8 +71,8 @@ const PrayerTimesPanel: React.FC<PrayerTimesPanelProps> = ({ prayerTimes }) => {
                     ))}
                 </div>
 
-                {/* ADJUSTMENT: Replaced `flex-1` with explicit, responsive size classes to make the clock larger. */}
-                <div className="p-4 w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
+                {/* A well-proportioned container for the clock */}
+                <div className="w-64 h-64 md:w-72 md:h-72 flex-shrink-0">
                     <IslamicAnalogClock />
                 </div>
             </div>

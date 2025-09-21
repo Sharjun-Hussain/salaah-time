@@ -5,46 +5,39 @@ interface PrayerTimeItemProps {
     name: string;
     time: string;
     iqamah: string;
-    isActive: boolean; // Prop to indicate if this is the current prayer
+    isActive: boolean;
 }
 
 const PrayerTimeItem: React.FC<PrayerTimeItemProps> = ({ icon, name, time, iqamah, isActive }) => {
-    // --- Define our visual states ---
-
-    // Style for the currently active prayer time. A vibrant, glowing card.
+    // A unified, professional style for the active prayer highlight.
+    // It uses a single accent color for the border and a subtle background tint.
     const activeClasses = isActive
-        ? 'bg-accent-gold/10 shadow-lg shadow-accent-gold/30 border-l-4 border-accent-gold' // A warm and majestic gold highlight
-        : 'bg-card-bg border-l-4 border-transparent hover:bg-active-card hover:border-accent-gold/50';
-    // Style for the icon. It will be more prominent when active.
-    const iconClasses = isActive
-        ? 'text-accent-gold'
-        : 'text-primary-blue';
+        ? 'bg-emerald-500/10 border-emerald-400' // Active state: subtle tint and a clear border
+        : 'border-transparent hover:bg-white/10'; // Default state: transparent border with a hover effect
 
     return (
-        // We use "display: contents" so this component can fit into a parent CSS Grid layout,
-        // which is essential for perfect column alignment.
+        // "display: contents" allows this component's children to align to the parent's grid
         <div className="display-contents">
 
-            {/* The main styled container with transitions and a subtle "lift" on hover */}
-            <div className={`grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 text-text-primary p-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1 ${activeClasses}`}>
+            <div className={`grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-4 p-3 border-l-4 rounded-lg transition-all duration-300 ${activeClasses}`}>
 
                 {/* Cell 1: Icon */}
-                <div className={`text-2xl md:text-3xl flex justify-center transition-colors duration-300 ${iconClasses}`}>
+                <div className={`text-2xl flex justify-center ${isActive ? 'text-emerald-400' : 'text-gray-400'}`}>
                     {icon}
                 </div>
 
                 {/* Cell 2: Prayer Name */}
-                <p className="text-lg md:text-xl font-semibold text-text-primary">
+                <p className={`text-lg font-semibold ${isActive ? 'text-white' : 'text-gray-200'}`}>
                     {name}
                 </p>
 
-                {/* Cell 3: Adhan Time - Using a monospaced font for clean alignment */}
-                <p className="text-xl md:text-2xl font-bold tracking-wider text-right text-text-primary font-mono">
+                {/* Cell 3: Adhan Time */}
+                <p className={`text-xl font-mono font-bold text-right ${isActive ? 'text-white' : 'text-gray-200'}`}>
                     {time}
                 </p>
 
-                {/* Cell 4: Iqamah Time - Using a distinct, vibrant color */}
-                <p className="text-xl md:text-2xl font-bold tracking-wider text-right text-secondary-green font-mono">
+                {/* Cell 4: Iqamah Time */}
+                <p className="text-xl font-mono font-bold text-right text-emerald-400">
                     {iqamah}
                 </p>
 

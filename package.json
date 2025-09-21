@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@umalqura/core": "^0.0.7",
+    "@vercel/speed-insights": "^1.2.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.16",
     "gsap": "^3.13.0",
