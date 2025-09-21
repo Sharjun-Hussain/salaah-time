@@ -1,176 +1,82 @@
-import React, { useState, useEffect, useRef, forwardRef } from 'react';
-import { PrayerTime } from 'types'; // Ensure your types are in './types'
+import React, { useState, useEffect } from 'react';
+import { FiSunrise, FiSun, FiSunset, FiMoon } from 'react-icons/fi';
+import { FaCloudSun } from "react-icons/fa";
+import { PrayerTime } from '../types';
+import PrayerTimeItem from './PrayerTimeItem';
+import IslamicAnalogClock from './Clock/Clock';
 
-// --- Interfaces ---
-interface NextPrayerEvent {
-    name: PrayerTime['name'];
-    type: 'ADHAN' | 'IQAMAH';
-    targetTime: Date;
-}
-interface NextPrayerInfoProps {
+interface PrayerTimesPanelProps {
     prayerTimes: PrayerTime[];
 }
 
-// --- Helper Function ---
-const createDateFromTimeString = (timeString: string, date: Date): Date => {
-    if (!timeString) return new Date(0);
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const newDate = new Date(date);
-    newDate.setHours(hours, minutes, 0, 0);
-    return newDate;
-};
+const PrayerTimesPanel: React.FC<PrayerTimesPanelProps> = ({ prayerTimes }) => {
+    const [activePrayerIndex, setActivePrayerIndex] = useState<number | null>(null);
 
-// --- ProgressRing (with simple CSS transition for animation) ---
-const ProgressRing = forwardRef<SVGCircleElement, { radius: number; stroke: number }>(
-    ({ radius, stroke }, ref) => {
-        const normalizedRadius = radius - stroke * 2;
-        const circumference = normalizedRadius * 2 * Math.PI;
-
-        return (
-            <svg height={radius * 2} width={radius * 2} className="-rotate-90">
-                <style>
-                    {/* This is the simple CSS animation. It tells the browser to smoothly
-                    transition any changes to the `stroke-dashoffset` over 0.5 seconds. */}
-                    {`.progress-ring-circle { transition: stroke-dashoffset 0.5s linear; }`}
-                </style>
-                <circle stroke="rgba(255, 255, 255, 0.1)" fill="transparent" strokeWidth={stroke} r={normalizedRadius} cx={radius} cy={radius} />
-                <circle
-                    ref={ref}
-                    className="progress-ring-circle"
-                    stroke="url(#gradient)"
-                    fill="transparent"
-                    strokeWidth={stroke}
-                    strokeDasharray={circumference}
-                    strokeDashoffset={circumference} // Start with a full offset (empty ring)
-                    strokeLinecap="round"
-                    r={normalizedRadius}
-                    cx={radius}
-                    cy={radius}
-                />
-                <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#3b82f6" />
-                        <stop offset="100%" stopColor="#10b981" />
-                    </linearGradient>
-                </defs>
-            </svg>
-        );
-    });
-
-// --- Main NextPrayerInfo Component (Optimized) ---
-const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
-    const [displayEvent, setDisplayEvent] = useState<NextPrayerEvent | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const hoursRef = useRef<HTMLSpanElement>(null);
-    const minutesRef = useRef<HTMLSpanElement>(null);
-    const secondsRef = useRef<HTMLSpanElement>(null);
-    const progressRingRef = useRef<SVGCircleElement>(null);
-    const animationFrameId = useRef<number>();
-    const lastUpdateTime = useRef<number>(0);
-    const eventData = useRef<{ allEvents: NextPrayerEvent[], previousEvent: NextPrayerEvent | null }>({ allEvents: [], previousEvent: null });
-    const displayEventRef = useRef(displayEvent);
-    displayEventRef.current = displayEvent;
-
-    const formatTime = (time: number = 0) => String(time).padStart(2, '0');
+    const icons: Record<PrayerTime['name'], React.ReactNode> = {
+        Shubuh: <FiSunrise />,
+        Luhar: <FiSun />,
+        Asr: <FaCloudSun />,
+        Maghrib: <FiSunset />,
+        Isha: <FiMoon />,
+    };
 
     useEffect(() => {
-        const allEvents = prayerTimes.flatMap(prayer => {
-            const today = new Date(); today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-            return [
-                { name: prayer.name, type: 'ADHAN' as const, targetTime: createDateFromTimeString(prayer.time, today) },
-                { name: prayer.name, type: 'IQAMAH' as const, targetTime: createDateFromTimeString(prayer.iqamah, today) },
-                ...(prayer.name === 'Shubuh' ? [{ name: prayer.name, type: 'ADHAN' as const, targetTime: createDateFromTimeString(prayer.time, tomorrow) }] : [])
-            ];
-        }).sort((a, b) => a.targetTime.getTime() - b.targetTime.getTime());
-        eventData.current.allEvents = allEvents;
-
-        const tick = (now: number) => {
-            animationFrameId.current = requestAnimationFrame(tick);
-            if (now - lastUpdateTime.current < 1000) return;
-            lastUpdateTime.current = now;
-
-            const currentDate = new Date(now);
-            const upcomingEvent = eventData.current.allEvents.find(event => event.targetTime > currentDate);
-            const pastEvents = eventData.current.allEvents.filter(event => event.targetTime <= currentDate);
-            const currentEvent = pastEvents.length > 0 ? pastEvents[pastEvents.length - 1] : null;
-
-            if (upcomingEvent) {
-                if (displayEventRef.current?.targetTime !== upcomingEvent.targetTime) {
-                    setDisplayEvent(upcomingEvent);
-                    eventData.current.previousEvent = currentEvent;
-                    if (isLoading) setIsLoading(false);
-                }
-
-                const { previousEvent } = eventData.current;
-                const timeRemaining = upcomingEvent.targetTime.getTime() - currentDate.getTime();
-
-                if (timeRemaining >= 0) {
-                    if (hoursRef.current) hoursRef.current.innerText = formatTime(Math.floor(timeRemaining / (1000 * 60 * 60)));
-                    if (minutesRef.current) minutesRef.current.innerText = formatTime(Math.floor((timeRemaining / 1000 / 60) % 60));
-                    if (secondsRef.current) secondsRef.current.innerText = formatTime(Math.floor((timeRemaining / 1000) % 60));
-                }
-
-                if (previousEvent && progressRingRef.current) {
-                    const totalDuration = upcomingEvent.targetTime.getTime() - previousEvent.targetTime.getTime();
-                    if (totalDuration > 0) {
-                        const timeElapsed = currentDate.getTime() - previousEvent.targetTime.getTime();
-                        const progress = Math.min(timeElapsed / totalDuration, 1);
-                        const ring = progressRingRef.current;
-                        const radius = parseFloat(ring.getAttribute('r') || '0');
-                        const circumference = 2 * Math.PI * radius;
-                        ring.style.strokeDashoffset = (circumference - progress * circumference).toString();
-                    }
+        const updateActivePrayer = () => {
+            const now = new Date();
+            let currentPrayerIndex = -1;
+            const prayerDates = prayerTimes.map(p => {
+                const [hours, minutes] = p.time.split(':').map(Number);
+                const date = new Date();
+                date.setHours(hours, minutes, 0, 0);
+                return date;
+            });
+            for (let i = 0; i < prayerDates.length; i++) {
+                if (prayerDates[i] <= now) {
+                    currentPrayerIndex = i;
                 }
             }
+            setActivePrayerIndex(currentPrayerIndex);
         };
+        updateActivePrayer();
+        const interval = setInterval(updateActivePrayer, 60000);
+        return () => clearInterval(interval);
+    }, [prayerTimes]);
 
-        animationFrameId.current = requestAnimationFrame(tick);
-        return () => { if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current); };
-    }, [prayerTimes, isLoading]);
-
-    if (isLoading) {
-        return <div className="flex-1 bg-black/25 p-4 rounded-2xl shadow-lg border border-white/10 flex items-center justify-center text-gray-300 text-sm animate-pulse">Calculating...</div>;
-    }
-
-    const subtitle = displayEvent?.type === 'ADHAN' ? 'Adhan In' : 'Iqamah In';
     return (
-        <div className="flex-1 bg-black/25 p-4 md:p-5 rounded-2xl shadow-lg border border-white/10 flex flex-col items-center justify-center text-center backdrop-blur-md">
-            <p className="text-base text-gray-400 mb-1">{subtitle}</p>
-            <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent mb-6">{displayEvent?.name}</h2>
-            <div className="grid place-items-center w-36 h-36 lg:w-44 lg:h-44">
-                <div className="col-start-1 row-start-1">
-                    <ProgressRing ref={progressRingRef} radius={window.innerWidth > 1024 ? 85 : 70} stroke={8} />
-                </div>
-                <div className="col-start-1 row-start-1 flex flex-col items-center justify-center">
-                    <div className="text-3xl lg:text-4xl font-mono font-bold text-white">
-                        <span ref={hoursRef}>00</span>:<span ref={minutesRef}>00</span>
+        <div className="">
+            {/* Main container stacks vertically on small screens, horizontal on large */}
+            <div className="flex flex-col lg:flex-row items-center justify-start gap-6 lg:gap-8">
+                {/* This container defines the grid for prayer times */}
+                <div className="w-full lg:w-auto flex flex-col gap-3">
+                    {/* Grid layout for perfect column alignment. Defines 4 columns. */}
+                    <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 text-xs md:text-sm font-bold text-gray-300 px-3">
+                        {/* Headers now align perfectly with the grid columns */}
+                        <div /> {/* Empty cell for icon column */}
+                        <p>Prayer</p>
+                        <p className="text-right">Adhan</p>
+                        <p className="text-right">Iqamah</p>
                     </div>
-                    <div className="text-lg lg:text-xl font-mono text-gray-400 mt-1">:<span ref={secondsRef}>00</span></div>
+
+                    {/* The list of prayer times will flow into the grid defined above */}
+                    {prayerTimes.map((prayer, index) => (
+                        <PrayerTimeItem
+                            key={prayer.name}
+                            icon={icons[prayer.name]}
+                            name={prayer.name}
+                            time={prayer.time}
+                            iqamah={prayer.iqamah}
+                            isActive={index === activePrayerIndex}
+                        />
+                    ))}
                 </div>
-            </div>
-            <div className="mt-6 flex gap-6">
-                <div>
-                    <p className="text-xs text-gray-400">{displayEvent?.type === 'ADHAN' ? 'Adhan at' : 'Iqamah at'}</p>
-                    <p className="text-base font-medium text-white">{displayEvent?.targetTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+
+                {/* ADJUSTMENT: Replaced `flex-1` with explicit, responsive size classes to make the clock larger. */}
+                <div className="p-4 w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
+                    <IslamicAnalogClock />
                 </div>
-                {displayEvent?.type === 'ADHAN' && (
-                    <div>
-                        <p className="text-xs text-gray-400">Iqamah at</p>
-                        <p className="text-base font-medium text-emerald-300">
-                            {(() => {
-                                const prayer = prayerTimes.find(p => p.name === displayEvent?.name);
-                                if (!prayer) return '';
-                                const iqamahDate = createDateFromTimeString(prayer.iqamah, new Date());
-                                return iqamahDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                            })()}
-                        </p>
-                    </div>
-                )}
             </div>
         </div>
     );
-};
+}
 
-export default NextPrayerInfo;
+export default PrayerTimesPanel;
