@@ -1,33 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// Interface remains the same
 interface IslamicAnalogClockProps {
     colors?: { [key: string]: string };
-    borderDesign?: 'simple' | 'geometric';
+    borderDesign?: 'simple' | 'geometric' | 'islamic';
     showArabicNumerals?: boolean;
+    showDecorativeElements?: boolean;
 }
 
 const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
     colors = {},
-    borderDesign = 'simple',
+    borderDesign = 'islamic',
     showArabicNumerals = false,
+    showDecorativeElements = false,
 }) => {
     const [time, setTime] = useState(new Date());
     const animationFrameId = useRef<number>();
 
-    // A vibrant palette for the multi-layered animated gradients
+    // Professional color palette with Islamic aesthetic
     const defaultColors = {
-        faceColor: 'rgba(255, 255, 255, 0.98)', // A clean, solid white face
-        numeralsColor: '#1A202C',
-        hourHandColor: '#1A202C',
-        minuteHandColor: '#2B6CB0', // Blued Steel
-        secondHandColor: '#D00000', // Ruby Red
-        handShadowColor: '#000000',
-        // Gradients for the two counter-rotating arcs
-        arc1_colorA: '#50E3C2', // Teal
-        arc1_colorB: '#4A90E2', // Blue
-        arc2_colorA: '#8A2BE2', // BlueViolet
-        arc2_colorB: '#FF69B4', // HotPink
+        faceColor: 'rgba(253, 253, 250, 0.95)', // Soft ivory
+        numeralsColor: '#2C3E50',
+        hourHandColor: '#2C3E50',
+        minuteHandColor: '#3498DB',
+        secondHandColor: '#E74C3C',
+        handShadowColor: 'rgba(0, 0, 0, 0.2)',
+        arc1_colorA: '#16A085', // Islamic green
+        arc1_colorB: '#2980B9', // Islamic blue
+        arc2_colorA: '#8E44AD', // Royal purple
+        arc2_colorB: '#E67E22', // Warm orange
+        decorativeColor: '#D4AF37', // Gold for decorative elements
+        centerPinColor: '#2C3E50',
     };
 
     const themeColors = { ...defaultColors, ...colors };
@@ -68,32 +70,85 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
     const borderR = 98;
     const borderCircumference = borderR * 2 * Math.PI;
 
-    return (
-        <svg width="100%" height="100%" viewBox="0 0 200 200" aria-label="Kinetic Gradient Islamic Analog Clock">
-            <defs>
-                {/* --- DEFINITIONS FOR THE DUAL ANIMATED BORDER --- */}
+    // Generate Islamic geometric pattern for the border
+    const generateGeometricPattern = () => {
+        if (borderDesign !== 'geometric') return null;
 
-                {/* Gradient for the first (clockwise) arc */}
+        const patterns = [];
+        const segments = 24;
+        const patternSize = 8;
+
+        for (let i = 0; i < segments; i++) {
+            const angle = (i * 360 / segments) - 90;
+            const radian = angle * Math.PI / 180;
+            const x = center + (borderR - patternSize / 2) * Math.cos(radian);
+            const y = center + (borderR - patternSize / 2) * Math.sin(radian);
+
+            patterns.push(
+                <rect
+                    key={`pattern-${i}`}
+                    x={x - patternSize / 2}
+                    y={y - patternSize / 2}
+                    width={patternSize}
+                    height={patternSize}
+                    fill={themeColors.decorativeColor}
+                    opacity="0.7"
+                    transform={`rotate(${angle + 45} ${x} ${y})`}
+                />
+            );
+        }
+
+        return patterns;
+    };
+
+    // Generate Islamic art motifs
+    const generateIslamicMotifs = () => {
+        if (!showDecorativeElements) return null;
+
+        const motifs = [];
+        const segments = 8;
+
+        for (let i = 0; i < segments; i++) {
+            const angle = i * (360 / segments);
+            const radian = angle * Math.PI / 180;
+            const distance = radius - 25;
+            const x = center + distance * Math.cos(radian);
+            const y = center + distance * Math.sin(radian);
+
+            motifs.push(
+                <path
+                    key={`motif-${i}`}
+                    d="M-5,-5 C-5,-8 -8,-10 -10,-10 C-12,-10 -15,-8 -15,-5 C-15,-2 -12,0 -10,0 C-8,0 -5,-2 -5,-5 Z"
+                    fill={themeColors.decorativeColor}
+                    opacity="0.4"
+                    transform={`translate(${x} ${y}) rotate(${angle})`}
+                />
+            );
+        }
+
+        return motifs;
+    };
+
+    return (
+        <svg width="100%" height="100%" viewBox="0 0 200 200" aria-label="Professional Kinetic Islamic Analog Clock">
+            <defs>
+                {/* Gradients for the arcs */}
                 <linearGradient id="arc1Gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={themeColors.arc1_colorA} />
                     <stop offset="100%" stopColor={themeColors.arc1_colorB} />
                 </linearGradient>
-
-                {/* Gradient for the second (counter-clockwise) arc */}
                 <linearGradient id="arc2Gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={themeColors.arc2_colorA} />
                     <stop offset="100%" stopColor={themeColors.arc2_colorB} />
                 </linearGradient>
 
-                {/* Mask 1: A 60% arc for the clockwise gradient */}
+                {/* Masks for the arcs */}
                 <mask id="arc1Mask">
                     <circle cx={center} cy={center} r={borderR} fill="transparent" stroke="white" strokeWidth="4"
                         strokeDasharray={`${borderCircumference * 0.6} ${borderCircumference * 0.4}`}
                         strokeLinecap="round"
                     />
                 </mask>
-
-                {/* Mask 2: A 40% arc for the counter-clockwise gradient */}
                 <mask id="arc2Mask">
                     <circle cx={center} cy={center} r={borderR} fill="transparent" stroke="white" strokeWidth="4"
                         strokeDasharray={`${borderCircumference * 0.4} ${borderCircumference * 0.6}`}
@@ -102,41 +157,78 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
                 </mask>
 
                 {/* Filter for hand shadows */}
-                <filter id="handShadow">
-                    <feDropShadow dx="0.5" dy="1" stdDeviation="1" floodColor={themeColors.handShadowColor} floodOpacity="0.2" />
+                <filter id="handShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
+                    <feOffset dx="1" dy="1" result="offsetblur" />
+                    <feFlood floodColor={themeColors.handShadowColor} floodOpacity="0.3" />
+                    <feComposite in2="offsetblur" operator="in" />
+                    <feMerge>
+                        <feMergeNode />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
                 </filter>
+
+                {/* Subtle radial gradient for the clock face */}
+                <radialGradient id="faceGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" stopColor={themeColors.faceColor} stopOpacity="1" />
+                    <stop offset="100%" stopColor={themeColors.faceColor} stopOpacity="0.95" />
+                </radialGradient>
             </defs>
 
-            {/* --- CLOCK CONSTRUCTION --- */}
+            {/* Clock background with subtle gradient */}
+            <circle cx={center} cy={center} r={radius} fill="url(#faceGradient)" stroke="#E0E0E0" strokeWidth="0.5" />
 
-            {/* The clean, white clock face */}
-            <circle cx={center} cy={center} r={radius} fill={themeColors.faceColor} />
+            {/* Decorative Islamic motifs */}
+            {generateIslamicMotifs()}
 
-            {/* A subtle track for the border */}
+            {/* Border track */}
             <circle cx={center} cy={center} r={borderR} fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="4" />
 
-            {/* BORDER EFFECT 1: A gradient rectangle masked into a 60% arc, animated CLOCKWISE */}
-            <rect x="0" y="0" width="200" height="200" fill="url(#arc1Gradient)" mask="url(#arc1Mask)">
-                <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="8s" repeatCount="indefinite" />
+            {/* Animated border elements */}
+            <rect x="0" y="0" width="200" height="200" fill="url(#arc1Gradient)" mask="url(#arc1Mask)" opacity="0.8">
+                <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="12s" repeatCount="indefinite" />
+            </rect>
+            <rect x="0" y="0" width="200" height="200" fill="url(#arc2Gradient)" mask="url(#arc2Mask)" opacity="0.8">
+                <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="18s" repeatCount="indefinite" />
             </rect>
 
-            {/* BORDER EFFECT 2: A second gradient rectangle masked into a 40% arc, animated COUNTER-CLOCKWISE */}
-            <rect x="0" y="0" width="200" height="200" fill="url(#arc2Gradient)" mask="url(#arc2Mask)">
-                <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="15s" repeatCount="indefinite" />
-            </rect>
+            {/* Geometric border pattern (if selected) */}
+            {borderDesign === 'geometric' && generateGeometricPattern()}
 
-            {/* Numerals and Markers (on top of the white face) */}
+            {/* Hour markers */}
             {Array.from({ length: 60 }).map((_, i) => (
-                <line key={`m-${i}`} x1={center} y1={center - radius} x2={center} y2={center - radius + (i % 5 === 0 ? 6 : 3)} stroke={i % 5 === 0 ? themeColors.numeralsColor : "#A0AEC0"} strokeWidth="1" transform={`rotate(${i * 6} ${center} ${center})`} />
+                <line
+                    key={`m-${i}`}
+                    x1={center}
+                    y1={center - radius}
+                    x2={center}
+                    y2={center - radius + (i % 5 === 0 ? 8 : 4)}
+                    stroke={i % 5 === 0 ? themeColors.numeralsColor : "#BDC3C7"}
+                    strokeWidth={i % 5 === 0 ? 2 : 1}
+                    transform={`rotate(${i * 6} ${center} ${center})`}
+                />
             ))}
+
+            {/* Numerals */}
             {Array.from({ length: 12 }).map((_, i) => {
                 const numeral = i + 1;
                 const angleRad = (numeral * 30 * Math.PI) / 180;
-                const numeralX = center + (radius - 15) * Math.sin(angleRad);
-                const numeralY = center - (radius - 15) * Math.cos(angleRad);
+                const numeralX = center + (radius - 20) * Math.sin(angleRad);
+                const numeralY = center - (radius - 20) * Math.cos(angleRad);
                 const displayNumeral = showArabicNumerals ? arabicNumerals[i] : numeral;
+
                 return (
-                    <text key={`n-${i}`} x={numeralX} y={numeralY} textAnchor="middle" dominantBaseline="middle" fill={themeColors.numeralsColor} fontSize="16" fontWeight="600" fontFamily="sans-serif">
+                    <text
+                        key={`n-${i}`}
+                        x={numeralX}
+                        y={numeralY}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill={themeColors.numeralsColor}
+                        fontSize="14"
+                        fontWeight="600"
+                        fontFamily={showArabicNumerals ? "'Scheherazade New', serif" : "'Open Sans', sans-serif"}
+                    >
                         {displayNumeral}
                     </text>
                 );
@@ -144,14 +236,25 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
 
             {/* Clock Hands with Shadows */}
             <g filter="url(#handShadow)">
-                <line x1={center} y1={center} x2={center} y2={center - 50} stroke={themeColors.hourHandColor} strokeWidth="6" strokeLinecap="round" transform={`rotate(${hourDeg} ${center} ${center})`} />
-                <line x1={center} y1={center} x2={center} y2={center - 75} stroke={themeColors.minuteHandColor} strokeWidth="4" strokeLinecap="round" transform={`rotate(${minuteDeg} ${center} ${center})`} />
-                <line x1={center} y1={center + 20} x2={center} y2={center - 80} stroke={themeColors.secondHandColor} strokeWidth="2" transform={`rotate(${secondDeg} ${center} ${center})`} />
+                {/* Hour hand with decorative element */}
+                <line x1={center} y1={center + 10} x2={center} y2={center - 45} stroke={themeColors.hourHandColor} strokeWidth="6" strokeLinecap="round" transform={`rotate(${hourDeg} ${center} ${center})`} />
+                <circle cx={center} cy={center + 12} r="4" fill={themeColors.hourHandColor} transform={`rotate(${hourDeg} ${center} ${center})`} />
+
+                {/* Minute hand */}
+                <line x1={center} y1={center + 12} x2={center} y2={center - 70} stroke={themeColors.minuteHandColor} strokeWidth="4" strokeLinecap="round" transform={`rotate(${minuteDeg} ${center} ${center})`} />
+
+                {/* Second hand with counterweight */}
+                <line x1={center} y1={center + 25} x2={center} y2={center - 80} stroke={themeColors.secondHandColor} strokeWidth="2" strokeLinecap="round" transform={`rotate(${secondDeg} ${center} ${center})`} />
+                <circle cx={center} cy={center + 20} r="3" fill={themeColors.secondHandColor} transform={`rotate(${secondDeg} ${center} ${center})`} />
             </g>
 
-            {/* Center Pin */}
-            <circle cx={center} cy={center} r="6" fill="#4A5568" />
-            <circle cx={center} cy={center} r="2" fill={themeColors.secondHandColor} />
+            {/* Center Pin with decorative elements */}
+            <circle cx={center} cy={center} r="8" fill={themeColors.centerPinColor} opacity="0.9" />
+            <circle cx={center} cy={center} r="6" fill={themeColors.decorativeColor} opacity="0.7" />
+            <circle cx={center} cy={center} r="3" fill={themeColors.secondHandColor} />
+
+            {/* Subtle outer ring */}
+            <circle cx={center} cy={center} r={borderR} fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" />
         </svg>
     );
 };
