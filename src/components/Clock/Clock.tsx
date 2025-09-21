@@ -15,6 +15,7 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
     const [time, setTime] = useState(new Date());
     const animationFrameId = useRef<number>();
 
+
     // Refined color palette for the new effects
     const defaultColors = {
         faceStartColor: 'rgba(245, 247, 250, 0.95)', // Lighter center
@@ -36,7 +37,10 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
             setTime(new Date());
             animationFrameId.current = requestAnimationFrame(animate);
         };
+        // Start the animation loop
         animationFrameId.current = requestAnimationFrame(animate);
+
+        // Cleanup function to cancel the animation when the component unmounts
         return () => {
             if (animationFrameId.current) {
                 cancelAnimationFrame(animationFrameId.current);
