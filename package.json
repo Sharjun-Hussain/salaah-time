@@ -1,17 +1,17 @@
 {
-  "name": "reactjs-vite-tailwindcss-boilerplate",
-  "description": "This is a boilerplate build with Vite, React 18, TypeScript, Vitest, Testing Library, TailwindCSS 3, Eslint and Prettier.",
+  "name": "Inzeedo - Masjidh Salaah Times",
+  "description": "This system developed by Inzeedo for Masjidh to disaplay Salaah times and Islamic Date",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "author": {
-    "name": "João Paulo Moraes",
-    "email": "joaopaulomoraes@outlook.com",
-    "url": "https://github.com/joaopaulomoraes"
+    "name": "Sharjun Hussain",
+    "email": "sharjunhussain@outlook.com",
+    "url": "http://github.com/sharjun-Hussain/"
   },
   "bugs": {
-    "url": "https://github.com/joaopaulomoraes/reactjs-vite-tailwindcss-boilerplate/issues",
-    "email": "joaopaulomoraes@outlook.com"
+    "url": "https://github.com/Sharjun-Hussain/salaah-time/issues",
+    "email": "sharjunhussain@outlook.com"
   },
   "scripts": {
     "dev": "vite",
