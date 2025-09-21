@@ -13,9 +13,8 @@ const PrayerTimeItem: React.FC<PrayerTimeItemProps> = ({ icon, name, time, iqama
 
     // Style for the currently active prayer time. A vibrant, glowing card.
     const activeClasses = isActive
-        ? 'bg-gradient-to-r from-primary-blue to-secondary-green shadow-lg shadow-secondary-green/30 border-l-4 border-accent-gold'
-        : 'bg-card-bg border border-transparent hover:bg-active-card hover:border-secondary-green/50'; // Default, with a hover effect
-
+        ? 'bg-accent-gold/10 shadow-lg shadow-accent-gold/30 border-l-4 border-accent-gold' // A warm and majestic gold highlight
+        : 'bg-card-bg border-l-4 border-transparent hover:bg-active-card hover:border-accent-gold/50';
     // Style for the icon. It will be more prominent when active.
     const iconClasses = isActive
         ? 'text-accent-gold'

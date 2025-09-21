@@ -133,7 +133,7 @@ const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
     const subtitle = nextEvent.type === 'ADHAN' ? 'Adhan In' : 'Iqamah In';
 
     return (
-        <div className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-4 md:p-5 rounded-2xl shadow-lg border border-gray-700 flex flex-col items-center justify-center text-center">
+        <div className="flex-1 bg-black/25 backdrop-blur-md border border-white/10 p-4 md:p-5 rounded-2xl shadow-lg  flex flex-col items-center justify-center text-center">
 
             <p className="text-base text-gray-400 mb-1">
                 {subtitle}
