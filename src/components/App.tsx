@@ -15,7 +15,7 @@ function App() {
   const prayerTimesData: PrayerTime[] = [
     { name: 'Shubuh', time: '04:50', iqamah: '05:00' },
     { name: 'Luhar', time: '13:08', iqamah: '13:20' },
-    { name: 'Asr', time: '16:35', iqamah: '16:45' },
+    { name: 'Asr', time: '16:01', iqamah: '16:02' },
     { name: 'Maghrib', time: '19:41', iqamah: '19:45' },
     { name: 'Isha', time: '21:05', iqamah: '21:15' },
   ];
