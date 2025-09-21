@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PrayerTime } from '../types';
 
+// Interfaces for our data structures
 interface NextPrayerEvent {
     name: PrayerTime['name'];
     type: 'ADHAN' | 'IQAMAH';
@@ -17,6 +18,7 @@ interface NextPrayerInfoProps {
     prayerTimes: PrayerTime[];
 }
 
+// Helper function to create a Date object from a "HH:mm" time string
 const createDateFromTimeString = (timeString: string, date: Date): Date => {
     const [hours, minutes] = timeString.split(':').map(Number);
     const newDate = new Date(date);
@@ -24,6 +26,7 @@ const createDateFromTimeString = (timeString: string, date: Date): Date => {
     return newDate;
 };
 
+// The ProgressRing component
 const ProgressRing: React.FC<{ radius: number; stroke: number; progress: number }> = ({
     radius, stroke, progress
 }) => {
@@ -33,15 +36,27 @@ const ProgressRing: React.FC<{ radius: number; stroke: number; progress: number 
 
     return (
         <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
+            {/* Background Track */}
+            <circle
+                stroke="rgba(255, 255, 255, 0.1)"
+                fill="transparent"
+                strokeWidth={stroke}
+                r={normalizedRadius}
+                cx={radius}
+                cy={radius}
+            />
+            {/* Foreground Gradient Progress */}
             <circle
                 stroke="url(#gradient)"
                 fill="transparent"
                 strokeWidth={stroke}
                 strokeDasharray={circumference + ' ' + circumference}
                 style={{ strokeDashoffset }}
+                strokeLinecap="round"
                 r={normalizedRadius}
                 cx={radius}
                 cy={radius}
+                className="transition-[stroke-dashoffset] duration-1000 ease-linear"
             />
             <defs>
                 <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -52,6 +67,7 @@ const ProgressRing: React.FC<{ radius: number; stroke: number; progress: number 
         </svg>
     );
 };
+
 
 const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
     const [nextEvent, setNextEvent] = useState<NextPrayerEvent | null>(null);
@@ -65,26 +81,12 @@ const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
             const tomorrow = new Date(now);
             tomorrow.setDate(now.getDate() + 1);
 
-            // Create a comprehensive list of all possible events for today and tomorrow
             const allEvents: NextPrayerEvent[] = [];
             prayerTimes.forEach(prayer => {
-                allEvents.push({
-                    name: prayer.name,
-                    type: 'ADHAN',
-                    targetTime: createDateFromTimeString(prayer.time, today)
-                });
-                allEvents.push({
-                    name: prayer.name,
-                    type: 'IQAMAH',
-                    targetTime: createDateFromTimeString(prayer.iqamah, today)
-                });
-                // Add tomorrow's Fajr to handle the overnight case seamlessly
+                allEvents.push({ name: prayer.name, type: 'ADHAN', targetTime: createDateFromTimeString(prayer.time, today) });
+                allEvents.push({ name: prayer.name, type: 'IQAMAH', targetTime: createDateFromTimeString(prayer.iqamah, today) });
                 if (prayer.name === 'Shubuh') {
-                    allEvents.push({
-                        name: prayer.name,
-                        type: 'ADHAN',
-                        targetTime: createDateFromTimeString(prayer.time, tomorrow)
-                    });
+                    allEvents.push({ name: prayer.name, type: 'ADHAN', targetTime: createDateFromTimeString(prayer.time, tomorrow) });
                 }
             });
 
@@ -97,17 +99,14 @@ const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
             setNextEvent(upcomingEvent || null);
 
             if (upcomingEvent) {
-                const totalDuration = previousEvent ?
-                    upcomingEvent.targetTime.getTime() - previousEvent.targetTime.getTime() : 0;
+                const totalDuration = previousEvent ? upcomingEvent.targetTime.getTime() - previousEvent.targetTime.getTime() : 0;
                 const timeRemaining = upcomingEvent.targetTime.getTime() - now.getTime();
 
-                // Calculate progress
                 if (totalDuration > 0) {
                     const timeElapsed = totalDuration - timeRemaining;
                     setProgress(Math.min(timeElapsed / totalDuration, 1));
                 }
 
-                // Calculate time left display
                 if (timeRemaining > 0) {
                     setTimeLeft({
                         hours: Math.floor(timeRemaining / (1000 * 60 * 60)),
@@ -125,69 +124,75 @@ const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
 
     if (!nextEvent || !timeLeft) {
         return (
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl shadow-lg border border-gray-700 flex items-center justify-center text-gray-300 text-sm animate-pulse">
+            <div className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl shadow-lg border border-gray-700 flex items-center justify-center text-gray-300 text-sm animate-pulse">
                 Calculating next prayer...
             </div>
         );
     }
 
     const subtitle = nextEvent.type === 'ADHAN' ? 'Adhan In' : 'Iqamah In';
-    const isIqamahNext = nextEvent.type === 'IQAMAH';
 
     return (
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl w-xl shadow-lg border border-gray-700">
-            <div className="flex items-center justify-between">
-                {/* Prayer Info */}
-                <div className="flex-1">
-                    <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                        {nextEvent.name}
-                    </h2>
-                    <p className="text-sm text-gray-400 mt-1">
-                        {subtitle}
+        <div className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-4 md:p-5 rounded-2xl shadow-lg border border-gray-700 flex flex-col items-center justify-center text-center">
+
+            <p className="text-base text-gray-400 mb-1">
+                {subtitle}
+            </p>
+
+            <h2 className="text-4xl lg:text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent mb-6">
+                {nextEvent.name}
+            </h2>
+
+            {/* ADJUSTMENT: Reduced container size */}
+            <div className="relative flex items-center justify-center w-36 h-36 lg:w-44 lg:h-44">
+                <div className="absolute inset-0 flex items-center justify-center">
+                    {/* ADJUSTMENT: Reduced radius and stroke props */}
+                    <ProgressRing radius={window.innerWidth > 1024 ? 85 : 70} stroke={8} progress={progress} />
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                    {/* ADJUSTMENT: Reduced text size */}
+                    <div className="text-3xl lg:text-2xl font-mono font-bold text-white">
+                        <span>{formatTime(timeLeft.hours)}</span>:
+                        <span>{formatTime(timeLeft.minutes)}</span>
+                    </div>
+                    {/* ADJUSTMENT: Reduced text size */}
+                    <div className="text-lg lg:text-xl font-mono text-gray-400 mt-1">
+                        :{formatTime(timeLeft.seconds)}
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-6 flex gap-6">
+                <div>
+                    <p className="text-xs text-gray-400">
+                        {nextEvent.type === 'ADHAN' ? 'Adhan at' : 'Iqamah at'}
                     </p>
-
-                    {/* Target Time */}
-                    <div className="mt-2">
-                        <p className="text-xs text-gray-400">
-                            {nextEvent.type === 'ADHAN' ? 'Adhan at' : 'Iqamah at'}
-                        </p>
-                        <p className="text-sm font-semibold text-white">
-                            {nextEvent.targetTime.toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                            })}
-                        </p>
-                    </div>
-
-                    {/* Show Iqamah time if next is Adhan */}
-                    {nextEvent.type === 'ADHAN' && (
-                        <div className="mt-2">
-                            <p className="text-xs text-gray-400">Iqamah at</p>
-                            <p className="text-sm font-semibold text-emerald-300">
-                                {prayerTimes
-                                    .find(p => p.name === nextEvent.name)
-                                    ?.iqamah}
-                            </p>
-                        </div>
-                    )}
+                    <p className="text-base font-medium text-white">
+                        {nextEvent.targetTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        })}
+                    </p>
                 </div>
 
-                {/* Progress Ring and Countdown */}
-                <div className="relative flex items-center justify-center">
-                    <div className="absolute">
-                        <ProgressRing radius={40} stroke={4} progress={progress} />
+                {nextEvent.type === 'ADHAN' && (
+                    <div>
+                        <p className="text-xs text-gray-400">Iqamah at</p>
+                        <p className="text-base font-medium text-emerald-300">
+                            {(() => {
+                                const prayer = prayerTimes.find(p => p.name === nextEvent.name);
+                                if (!prayer) return '';
+                                const iqamahDate = createDateFromTimeString(prayer.iqamah, new Date());
+                                return iqamahDate.toLocaleTimeString('en-US', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                            })()}
+                        </p>
                     </div>
-                    <div className="flex flex-col items-center justify-center w-20 h-20">
-                        <div className="text-lg font-mono font-bold text-white">
-                            <span>{formatTime(timeLeft.hours)}</span>:
-                            <span>{formatTime(timeLeft.minutes)}</span>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                            :{formatTime(timeLeft.seconds)}
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
         </div>
     );
