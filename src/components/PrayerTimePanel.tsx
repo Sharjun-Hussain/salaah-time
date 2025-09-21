@@ -72,7 +72,7 @@ const PrayerTimesPanel: React.FC<PrayerTimesPanelProps> = ({ prayerTimes }) => {
 
                 {/* ADJUSTMENT: Replaced `flex-1` with explicit, responsive size classes to make the clock larger. */}
                 <div className="p-4 w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
-                    <IslamicAnalogClock />
+                    {/* <IslamicAnalogClock /> */}
                 </div>
             </div>
         </div>
