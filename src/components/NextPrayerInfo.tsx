@@ -18,8 +18,7 @@ interface NextPrayerInfoProps {
     prayerTimes: PrayerTime[];
 }
 
-// Helper function to create a Date object from a "HH:mm" time string for a given date
-// This function remains the same, its usage is what we will correct.
+// Helper function to create a Date object from a "HH:mm" time string
 const createDateFromTimeString = (timeString: string, date: Date): Date => {
     const [hours, minutes] = timeString.split(':').map(Number);
     const newDate = new Date(date);
@@ -52,17 +51,16 @@ const ProgressRing: React.FC<{ radius: number; stroke: number; progress: number 
 
 
 const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
+    // FIX 1: Add a dedicated `isLoading` state.
+    // This will be `true` only on the initial load.
+    const [isLoading, setIsLoading] = useState(true);
     const [nextEvent, setNextEvent] = useState<NextPrayerEvent | null>(null);
     const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            // FIX 1: We get the live `now` time once per tick.
+        const updateCountdown = () => {
             const now = new Date();
-
-            // FIX 2: We create clean date objects for "today" and "tomorrow" at midnight.
-            // This prevents the current time's hours/minutes from interfering with event creation.
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const tomorrow = new Date(today);
@@ -70,7 +68,6 @@ const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
 
             const allEvents: NextPrayerEvent[] = [];
             prayerTimes.forEach(prayer => {
-                // Now we build event times based on the clean `today` and `tomorrow` dates.
                 allEvents.push({ name: prayer.name, type: 'ADHAN', targetTime: createDateFromTimeString(prayer.time, today) });
                 allEvents.push({ name: prayer.name, type: 'IQAMAH', targetTime: createDateFromTimeString(prayer.iqamah, today) });
                 if (prayer.name === 'Shubuh') {
@@ -80,51 +77,64 @@ const NextPrayerInfo: React.FC<NextPrayerInfoProps> = ({ prayerTimes }) => {
 
             allEvents.sort((a, b) => a.targetTime.getTime() - b.targetTime.getTime());
 
-            // FIX 3: The logic now accurately finds events relative to the precise `now`.
             const upcomingEvent = allEvents.find(event => event.targetTime > now);
             const pastEvents = allEvents.filter(event => event.targetTime <= now);
             const previousEvent = pastEvents.length > 0 ? pastEvents[pastEvents.length - 1] : null;
 
-            setNextEvent(upcomingEvent || null);
+            // FIX 2: Only update state if we found a valid upcoming event.
+            // This prevents the state from being set to `null` and causing a flicker.
+            if (upcomingEvent) {
+                setNextEvent(upcomingEvent);
 
-            if (upcomingEvent && previousEvent) {
-                // Calculations for `timeRemaining` and `progress` are now precise.
-                const totalDuration = upcomingEvent.targetTime.getTime() - previousEvent.targetTime.getTime();
-                const timeRemaining = upcomingEvent.targetTime.getTime() - now.getTime();
+                if (previousEvent) {
+                    const totalDuration = upcomingEvent.targetTime.getTime() - previousEvent.targetTime.getTime();
+                    const timeRemaining = upcomingEvent.targetTime.getTime() - now.getTime();
 
-                if (totalDuration > 0 && timeRemaining > 0) {
-                    const timeElapsed = now.getTime() - previousEvent.targetTime.getTime();
-                    setProgress(Math.min(timeElapsed / totalDuration, 1));
+                    if (totalDuration > 0 && timeRemaining > 0) {
+                        const timeElapsed = now.getTime() - previousEvent.targetTime.getTime();
+                        setProgress(Math.min(timeElapsed / totalDuration, 1));
 
-                    setTimeLeft({
-                        hours: Math.floor(timeRemaining / (1000 * 60 * 60)),
-                        minutes: Math.floor((timeRemaining / 1000 / 60) % 60),
-                        seconds: Math.floor((timeRemaining / 1000) % 60),
-                    });
-                } else {
-                    setProgress(0);
+                        setTimeLeft({
+                            hours: Math.floor(timeRemaining / (1000 * 60 * 60)),
+                            minutes: Math.floor((timeRemaining / 1000 / 60) % 60),
+                            seconds: Math.floor((timeRemaining / 1000) % 60),
+                        });
+                    } else {
+                        setProgress(0);
+                    }
                 }
-            } else {
-                setProgress(0);
+                // Once we have data, we are no longer in the initial loading state.
+                if (isLoading) setIsLoading(false);
             }
-        }, 1000);
+        };
+
+        // Run once immediately to prevent showing the loading state if possible
+        updateCountdown();
+
+        const timer = setInterval(updateCountdown, 1000);
 
         return () => clearInterval(timer);
-    }, [prayerTimes]);
+    }, [prayerTimes, isLoading]); // Added isLoading to dependency array
 
     const formatTime = (time: number = 0) => String(time).padStart(2, '0');
 
-    // The JSX part of the component remains the same. The fix is purely logical.
-    if (!nextEvent || !timeLeft) {
+    // FIX 3: The loading state is now only shown if `isLoading` is true.
+    if (isLoading) {
         return (
-            <div className="flex-1 backdrop-blur-lg bg-black/30 p-4 rounded-2xl shadow-lg border border-gray-700 flex items-center justify-center text-gray-300 text-sm animate-pulse">
+            <div className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl shadow-lg border border-gray-700 flex items-center justify-center text-gray-300 text-sm animate-pulse">
                 Calculating next prayer...
             </div>
         );
     }
+
+    // This prevents a crash if nextEvent somehow becomes null after the initial load
+    if (!nextEvent || !timeLeft) {
+        return null; // Render nothing briefly instead of a flickering loading box
+    }
+
     const subtitle = nextEvent.type === 'ADHAN' ? 'Adhan In' : 'Iqamah In';
     return (
-        <div className="flex-1 g-black/25 backdrop-blur-md border border-white/10 p-4 md:p-5 rounded-2xl shadow-xl  flex flex-col items-center justify-center text-center">
+        <div className="flex-1 bg-black/25 backdrop-blur-md p-4 md:p-5 rounded-2xl shadow-lg border border-white/10 flex flex-col items-center justify-center text-center">
             <p className="text-base text-gray-400 mb-1">{subtitle}</p>
             <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent mb-6">{nextEvent.name}</h2>
             <div className="grid place-items-center w-36 h-36 lg:w-44 lg:h-44">
