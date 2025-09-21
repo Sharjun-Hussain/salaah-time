@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// Interface remains the same
 interface IslamicAnalogClockProps {
     colors?: { [key: string]: string };
     borderDesign?: 'simple' | 'geometric';
@@ -12,15 +13,14 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
     showArabicNumerals = false,
 }) => {
     const [time, setTime] = useState(new Date());
-    // Use a ref to hold the animation frame ID
     const animationFrameId = useRef<number>();
 
+    // Refined color palette for the new effects
     const defaultColors = {
-        faceColor: 'rgba(255, 255, 255, 0.95)',
-        borderColor: '#4A90E2', // Primary blue
-        borderTrackColor: 'rgba(74, 144, 226, 0.2)', // Faded blue for the track
-        gradientStartColor: '#50E3C2', // Secondary green
-        gradientEndColor: '#4A90E2',   // Primary blue
+        faceStartColor: 'rgba(245, 247, 250, 0.95)', // Lighter center
+        faceEndColor: 'rgba(220, 225, 230, 0.95)',   // Darker edge for 3D effect
+        borderTrackColor: 'rgba(74, 144, 226, 0.15)',// Dim track for the glow
+        glowColor: '#50E3C2',                       // Vibrant teal for the glow
         numeralsColor: '#1A202C',
         centerDotColor: '#FFD700',
         hourHandColor: '#1A202C',
@@ -30,16 +30,13 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
 
     const themeColors = { ...defaultColors, ...colors };
 
-    // EFFECT FOR SMOOTH ANIMATION
+    // Using requestAnimationFrame for perfectly smooth animations
     useEffect(() => {
         const animate = () => {
             setTime(new Date());
             animationFrameId.current = requestAnimationFrame(animate);
         };
-        // Start the animation loop
         animationFrameId.current = requestAnimationFrame(animate);
-
-        // Cleanup function to cancel the animation when the component unmounts
         return () => {
             if (animationFrameId.current) {
                 cancelAnimationFrame(animationFrameId.current);
@@ -47,17 +44,15 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
         };
     }, []);
 
+    // Calculation for smooth hand movements
     const getRotationDegrees = () => {
         const seconds = time.getSeconds();
         const milliseconds = time.getMilliseconds();
         const minutes = time.getMinutes();
         const hours = time.getHours();
 
-        // SMOOTH SECOND HAND CALCULATION: Use milliseconds for a continuous value
         const continuousSeconds = seconds + milliseconds / 1000;
         const secondDeg = (continuousSeconds / 60) * 360;
-
-        // Minute and hour hands also get smoother movement based on the seconds
         const minuteDeg = (minutes / 60) * 360 + (continuousSeconds / 60) * 6;
         const hourDeg = (hours % 12) * 30 + (minutes / 60) * 30;
 
@@ -68,58 +63,78 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
     const arabicNumerals = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١', '١٢'];
     const center = 100;
     const radius = 90;
-    const borderR = 98; // Radius for the border
+    const borderR = 98;
     const borderCircumference = borderR * 2 * Math.PI;
 
     return (
         <svg width="100%" height="100%" viewBox="0 0 200 200" aria-label="Islamic Analog Clock">
             <defs>
-                {/* GRADIENT DEFINITION for the border arc */}
-                <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor={themeColors.gradientStartColor} stopOpacity="1" />
-                    <stop offset="100%" stopColor={themeColors.gradientEndColor} stopOpacity="0" />
-                </linearGradient>
+                {/* EFFECT 1: Definition for the GLOW */}
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                    <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+
+                {/* EFFECT 2: Definition for the 3D CLOCK FACE */}
+                <radialGradient id="faceGradient">
+                    <stop offset="0%" stopColor={themeColors.faceStartColor} />
+                    <stop offset="100%" stopColor={themeColors.faceEndColor} />
+                </radialGradient>
+
+                {/* EFFECT 3: Definition for the HAND SHADOWS */}
+                <filter id="handShadow">
+                    <feDropShadow dx="0.5" dy="1" stdDeviation="1" floodColor="#000000" floodOpacity="0.3" />
+                </filter>
             </defs>
 
-            {/* Clock Face and Border */}
-            <circle cx={center} cy={center} r={radius} fill={themeColors.faceColor} />
+            {/* Clock Face with 3D gradient and Border */}
+            <circle cx={center} cy={center} r={radius} fill="url(#faceGradient)" />
+            <circle cx={center} cy={center} r={borderR} fill="none" stroke={themeColors.borderTrackColor} strokeWidth="1" />
 
-            {/* 1. Static Background Border Track */}
-            <circle cx={center} cy={center} r={borderR} fill="none" stroke={themeColors.borderTrackColor} strokeWidth="4" />
-
-            {/* 2. Dynamic Gradient Arc that follows the second hand */}
+            {/* The Dynamic Glowing Arc */}
             <circle
                 cx={center}
                 cy={center}
                 r={borderR}
                 fill="none"
-                stroke="url(#borderGradient)"
-                strokeWidth="4"
+                stroke={themeColors.glowColor}
+                strokeWidth="2.5"
                 strokeLinecap="round"
-                // This creates an arc that is 25% of the circle's length
-                strokeDasharray={`${borderCircumference * 0.25} ${borderCircumference * 0.75}`}
-                // The rotation is synced with the second hand
+                strokeDasharray={`${borderCircumference * 0.20} ${borderCircumference * 0.80}`} // A 20% arc
+                filter="url(#glow)"
                 transform={`rotate(${secondDeg - 90} ${center} ${center})`}
             />
 
-            {borderDesign === 'geometric' && (
-                <circle cx={center} cy={center} r="92" fill="none" stroke={themeColors.borderColor} strokeWidth="1" strokeDasharray="4 8" />
-            )}
+            {/* EFFECT 4: Detailed Minute/Second Markers */}
+            {Array.from({ length: 60 }).map((_, i) => {
+                const angleRad = (i * 6 * Math.PI) / 180;
+                const isHourMarker = i % 5 === 0;
+                const startRadius = isHourMarker ? radius - 8 : radius - 5;
+                const x1 = center + radius * Math.sin(angleRad);
+                const y1 = center - radius * Math.cos(angleRad);
+                const x2 = center + startRadius * Math.sin(angleRad);
+                const y2 = center - startRadius * Math.cos(angleRad);
 
-            {/* Hour/Minute Markers and Numerals */}
+                // We don't draw on top of the main hour markers, which are handled below
+                if (isHourMarker) return null;
+
+                return (
+                    <line key={`minute-marker-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={themeColors.numeralsColor} strokeWidth="0.5" />
+                );
+            })}
+
+            {/* Hour Markers and Numerals */}
             {Array.from({ length: 12 }).map((_, i) => {
                 const numeral = i + 1;
                 const angleRad = (numeral * 30 * Math.PI) / 180;
-                const x1 = center + radius * Math.sin(angleRad);
-                const y1 = center - radius * Math.cos(angleRad);
-                const x2 = center + (radius - 5) * Math.sin(angleRad);
-                const y2 = center - (radius - 5) * Math.cos(angleRad);
                 const numeralX = center + (radius - 18) * Math.sin(angleRad);
                 const numeralY = center - (radius - 18) * Math.cos(angleRad);
                 const displayNumeral = showArabicNumerals ? arabicNumerals[i] : numeral;
                 return (
                     <g key={`marker-${i}`}>
-                        <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={themeColors.numeralsColor} strokeWidth="2" />
                         <text x={numeralX} y={numeralY} textAnchor="middle" dominantBaseline="middle" fill={themeColors.numeralsColor} fontSize="14" fontWeight="bold" fontFamily="Arial, sans-serif">
                             {displayNumeral}
                         </text>
@@ -127,8 +142,8 @@ const IslamicAnalogClock: React.FC<IslamicAnalogClockProps> = ({
                 );
             })}
 
-            {/* Clock Hands */}
-            <g>
+            {/* Clock Hands with Shadows */}
+            <g filter="url(#handShadow)">
                 <line x1={center} y1={center} x2={center} y2={center - 50} stroke={themeColors.hourHandColor} strokeWidth="5" strokeLinecap="round" transform={`rotate(${hourDeg} ${center} ${center})`} />
                 <line x1={center} y1={center} x2={center} y2={center - 75} stroke={themeColors.minuteHandColor} strokeWidth="3" strokeLinecap="round" transform={`rotate(${minuteDeg} ${center} ${center})`} />
                 <line x1={center} y1={center + 20} x2={center} y2={center - 80} stroke={themeColors.secondHandColor} strokeWidth="1.5" transform={`rotate(${secondDeg} ${center} ${center})`} />
